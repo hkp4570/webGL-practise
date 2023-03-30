@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <script src="./utils/utils.js"></script>
+        <title>绘制圆环</title>
+    </head>
+    <body>
+        <canvas width="500" height="500" id="canvas"></canvas>
+        <script type="notjs" id="vertex">
+            attribute vec2 a_position;
+            attribute vec4 a_color;
+            uniform vec2 screenSize;
+            varying vec4 v_color;
+            attribute float pointSize;
+            void main(){
+                float x = a_position.x * 2.0 / screenSize.x - 1.0;
+                float y = 1.0 - (a_position.y * 2.0 / screenSize.y);
+                gl_Position = vec4(x,y,0,1);
+                gl_PointSize = 10.0;
+                v_color = a_color;
+            }
+
+        </script>
+        <script type="notjs" id="fragment">
+            precision mediump float;
+            varying vec4 v_color;
+            void main(){
+                gl_FragColor = v_color;
+            }
+
+        </script>
+        <script>
+            const canvas = document.getElementById('canvas');
+            const gl = canvas.getContext('webgl');
+            if (!gl) {
+                alert('不支持webgl')
+            }
+            const vertexStr = document.getElementById('vertex').innerText;
+            const fragmentStr = document.getElementById('fragment').innerText;
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexStr);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentStr);
+            const program = createProgram(gl, vertexShader, fragmentShader);
+            gl.useProgram(program);
+
+            const a_position = gl.getAttribLocation(program, 'a_position');
+            const a_color = gl.getAttribLocation(program, 'a_color');
+            const screenSize = gl.getUniformLocation(program, 'screenSize');
+            gl.uniform2f(screenSize, canvas.width, canvas.height);
+
+            const positionBuffer = gl.createBuffer();
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+            const points = circlePoints(100, 100, 80, 50, 3).points;
+            const index = circlePoints(100, 100, 80, 50, 3).index;
+            console.log(points,'points');
+            console.log(index, 'index');
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(index), gl.STATIC_DRAW);
+
+            gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 4 * 5, 0);
+            gl.vertexAttribPointer(a_color, 3, gl.FLOAT, false, 4 * 5, 4 * 2);
+            gl.enableVertexAttribArray(a_position);
+            gl.enableVertexAttribArray(a_color);
+
+            // gl.drawArrays(gl.TRIANGLE_FAN,0,52);
+            gl.drawElements(gl.TRIANGLE_STRIP, index.length, gl.UNSIGNED_SHORT, 0);
+
+            // function circlePoints(x,y,radius,n){
+            //     const points = [x,y,1,0,0];
+            //     for (let i = 0; i <= n; i++) {
+            //         const angle = i * Math.PI * 2 / n;
+            //         const pointX = radius * Math.cos(angle) + x;
+            //         const pointY = radius * Math.sin(angle) + y;
+            //         points.push(pointX,pointY,Math.random(),Math.random(),Math.random());
+            //     }
+            //     return points;
+            // }
+
+            function circlePoints(x, y, outerRadius, innerRadius, n) {
+                const points = [];
+                const index = [];
+                for (let i = 0; i < n; i++) {
+                    const color = randomColor();
+                    const angle = i * Math.PI * 2 / n;
+                    const outerX = outerRadius * Math.cos(angle) + x;
+                    const outerY = outerRadius * Math.sin(angle) + y;
+                    const innerX = innerRadius * Math.cos(angle) + x;
+                    const innerY = innerRadius * Math.sin(angle) + y;
+                    points.push(innerX, innerY, color.r, color.g, color.b);
+                    points.push(outerX, outerY, color.r, color.g, color.b);
+
+                    let v0 = i * 2;
+                    let v1 = v0 + 1;
+                    let v2 = v0 + 2;
+                    let v3 = v0 + 3;
+                    if (i === n - 1) {
+                        v2 = 0;
+                        v3 = 1;
+                    }
+                    index.push(v0, v1, v2, v3);
+                }
+                return {points, index};
+            }
+        </script>
+    </body>
+</html>
