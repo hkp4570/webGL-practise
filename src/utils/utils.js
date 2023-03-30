@@ -20,3 +20,12 @@ function createProgram(gl, vertexShader, fragmentShader) {
     }
     console.log(gl.getProgramInfoLog(program));
 }
+
+function randomColor() {
+    return {
+        r: Math.random(),
+        g: Math.random(),
+        b: Math.random(),
+        a: 0.5 * Math.random() + 0.5,
+    }
+}
