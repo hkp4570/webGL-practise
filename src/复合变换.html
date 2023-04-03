@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <script src="./utils/utils.js"></script>
+        <title>复合变换</title>
+    </head>
+    <body>
+        <canvas width="500" height="500" id="canvas"></canvas>
+        <script type="notjs" id="vertex">
+            attribute vec4 a_position;
+            attribute vec4 a_color;
+            varying vec4 v_color;
+            uniform mat4 a_translateMatrix;
+            uniform mat4 a_rotateMatrix;
+            uniform mat4 a_scaleMatrix;
+            void main(){
+                gl_Position = a_rotateMatrix *  a_scaleMatrix * a_translateMatrix * a_position;
+                v_color = a_color;
+            }
+
+
+
+        </script>
+        <script type="notjs" id="fragment">
+            precision mediump float;
+            varying vec4 v_color;
+            void main(){
+                gl_FragColor = v_color;
+            }
+
+
+
+        </script>
+        <script>
+            const canvas = document.getElementById('canvas')
+            const gl = canvas.getContext('webgl')
+            if (!gl) {
+                alert('不支持webgl')
+            }
+
+            const vertexStr = document.getElementById('vertex').innerText
+            const fragmentStr = document.getElementById('fragment').innerText
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexStr)
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentStr)
+            const program = createProgram(gl, vertexShader, fragmentShader)
+            gl.useProgram(program)
+
+            const a_position = gl.getAttribLocation(program, 'a_position')
+            const a_color = gl.getAttribLocation(program, 'a_color')
+            const a_translateMatrix = gl.getUniformLocation(program, 'a_translateMatrix')
+            const a_rotateMatrix = gl.getUniformLocation(program, 'a_rotateMatrix')
+            const a_scaleMatrix = gl.getUniformLocation(program, 'a_scaleMatrix')
+
+            let deg = 45;
+            const TX = 0.5, TY = -0.5, TZ = 0;
+            const SX = 0.5, SY = 0.5, SZ = 0;
+
+            // 平移
+            gl.uniformMatrix4fv(a_translateMatrix, false, new Float32Array([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                TX, TY, TZ, 1
+            ]))
+            // 缩放
+            gl.uniformMatrix4fv(a_scaleMatrix, false, new Float32Array([
+                SX, 0, 0, 0,
+                0, SY, 0, 0,
+                0, 0, SZ, 0,
+                0, 0, 0, 1
+            ]))
+
+            const positionBuffer = gl.createBuffer()
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+            function draw() {
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                    -0.5, 0.5, 0, 1, 0, 0,
+                    -0.5, -0.5, 0, 0, 1, 0,
+                    0.5, -0.5, 0, 0, 0, 1,
+
+                    0.5, -0.5, 0, 0, 0, 1,
+                    0.5, 0.5, 0, 0, 1, 0,
+                    -0.5, 0.5, 0, 1, 0, 0,
+                ]), gl.STATIC_DRAW)
+
+                gl.vertexAttribPointer(a_position, 3, gl.FLOAT, false, 4 * 6, 0)
+                gl.vertexAttribPointer(a_color, 3, gl.FLOAT, false, 4 * 6, 4 * 3)
+                gl.enableVertexAttribArray(a_position)
+                gl.enableVertexAttribArray(a_color)
+
+                gl.drawArrays(gl.TRIANGLE_FAN, 0, 6)
+            }
+
+            function rotate(){
+                deg ++;
+                const cosb = Math.cos(deg * Math.PI / 180);
+                const sinb = Math.sin(deg * Math.PI / 180);
+                // 旋转
+                gl.uniformMatrix4fv(a_rotateMatrix, false, new Float32Array([
+                    cosb, sinb, 0, 0,
+                    -sinb, cosb, 0, 0,
+                    0, 0, 1, 0,
+                    0,0,0,1
+                ]))
+                draw();
+            }
+            rotate();
+            setInterval(() => {
+                rotate();
+            },100)
+        </script>
+    </body>
+</html>
