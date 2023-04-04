@@ -21,6 +21,14 @@ function createProgram(gl, vertexShader, fragmentShader) {
     console.log(gl.getProgramInfoLog(program));
 }
 
+function fastCreateProgram(gl, vertexId, fragmentId) {
+    const vertexSource = document.getElementById(vertexId).innerText;
+    const fragmentSource = document.getElementById(fragmentId).innerText;
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    return createProgram(gl, vertexShader, fragmentShader);
+}
+
 function randomColor() {
     return {
         r: Math.random(),
