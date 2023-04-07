@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <script src="./utils/utils.js"></script>
+        <script src="./utils/cuon-matrix.js"></script>
+        <title>绘制球体</title>
+    </head>
+    <body>
+        <canvas width="500" height="500" id="canvas"></canvas>
+        <script type="notjs" id="vertex">
+            attribute vec4 a_position;
+            attribute vec4 a_color;
+            varying vec4 v_color;
+            uniform mat4 u_matrix;
+            void main(){
+                gl_Position = u_matrix * a_position;
+                v_color = a_color;
+            }
+
+
+
+
+        </script>
+        <script type="notjs" id="fragment">
+            precision mediump float;
+            varying vec4 v_color;
+            void main(){
+                gl_FragColor = v_color;
+            }
+
+
+
+
+        </script>
+        <script>
+            const canvas = document.getElementById('canvas')
+            const gl = canvas.getContext('webgl')
+            if (!gl) {
+                alert('不支持webgl')
+            }
+
+            const program = fastCreateProgram(gl, 'vertex', 'fragment')
+            gl.useProgram(program)
+            console.log(program);
+            const a_position = gl.getAttribLocation(program, 'a_position')
+            const a_color = gl.getAttribLocation(program, 'a_color')
+            const u_matrix = gl.getUniformLocation(program, 'u_matrix')
+
+            const positionBuffer = gl.createBuffer()
+            const indexBuffer = gl.createBuffer()
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+
+            // 开启深度检测
+            gl.enable(gl.DEPTH_TEST)
+
+            function createSphere(sphereRadius, circleCount, triangleCount) {
+                const circleAngle = Math.PI / circleCount;
+                const triangleAngle = (2 * Math.PI) / triangleCount;
+                const positions = [], indices = [];
+                for (let i = 0; i <= circleCount; i++) {
+                    // ? 角度乘以索引值 y轴有正负 cos(30)和cos(150)互为相反数 对应y轴的正负
+                    // 分为circleCount个面 需要circleCount-1条纬线
+                    const y = sphereRadius * Math.cos(circleAngle * i);
+                    const radius = sphereRadius * Math.sin(circleAngle * i);
+                    for (let j = 0; j <= triangleCount; j++) {
+                        const x = radius * Math.cos(triangleAngle * j);
+                        const z = radius * Math.sin(triangleAngle * j);
+                        positions.push(x, y, z, Math.random(), Math.random(), Math.random());
+                    }
+                }
+
+                for (let i = 0; i < circleCount; i++) {
+                    for (let j = 0; j < triangleCount; j++) {
+                        const v0 = i * (triangleCount + 1) + j;
+                        const v1 = v0 + 1;
+                        const v2 = (i + 1) * (triangleCount + 1) + j + 1;
+                        const v3 = v2 - 1;
+                        indices.push(v0, v1, v2, v2, v3, v0);
+                    }
+                }
+
+                return {
+                    positions,
+                    indices,
+                }
+            }
+
+
+            function draw() {
+                const {positions, indices} = createSphere(1, 20, 20);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+
+                gl.vertexAttribPointer(a_position, 3, gl.FLOAT, false, 4 * 6, 0);
+                gl.vertexAttribPointer(a_color, 3, gl.FLOAT, false, 4 * 6, 4 * 3);
+                gl.enableVertexAttribArray(a_position);
+                gl.enableVertexAttribArray(a_color);
+                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            }
+
+            let deg = 1;
+
+            function rotate() {
+                let matrix = new Matrix4()
+                matrix = matrix.setRotate(deg, 1, 1, 0)
+                const viewMatrix = new Matrix4();
+                viewMatrix.ortho(-3, 3, -3, 3, -100, 100);
+                matrix = viewMatrix.multiply(matrix);
+                gl.uniformMatrix4fv(u_matrix, false, matrix.elements)
+                draw()
+                // requestAnimationFrame(rotate);
+            }
+
+            rotate();
+        </script>
+    </body>
+</html>
