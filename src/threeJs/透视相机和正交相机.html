@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>透视相机和正交相机</title>
+    </head>
+    <body>
+        <script type="module">
+            import {
+                Scene,
+                PerspectiveCamera,
+                OrthographicCamera,
+                WebGLRenderer,
+                BoxGeometry,
+                MeshBasicMaterial,
+                Mesh
+            } from './three.js';
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const scene = new Scene();
+            // 透视相机
+            const perspectiveCamera = new PerspectiveCamera(45, width / height, 1, 1000);
+            // 正交相机
+            const orthCamera = new OrthographicCamera(width / -2, width / 2, height / 2, height / -2, 1, 1000);
+            const renderer = new WebGLRenderer();
+            renderer.setSize(width, height);
+            document.body.appendChild(renderer.domElement);
+
+            const geometry = new BoxGeometry(100, 100, 100);
+            const material = new MeshBasicMaterial({color: 0x00ff00});
+            const cube = new Mesh(geometry, material);
+            scene.add(cube);
+
+            perspectiveCamera.position.z = 100 * Math.sqrt(2);
+            orthCamera.position.z = 100 * Math.sqrt(2);
+            console.log(perspectiveCamera);
+            // perspectiveCamera.up.x = -1;
+            perspectiveCamera.lookAt(0,100,0);
+
+            function animate() {
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, perspectiveCamera);
+                // requestAnimationFrame(animate);
+            }
+
+            animate();
+        </script>
+    </body>
+</html>
