@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>第一个程序-旋转立方体</title>
+    </head>
+    <body>
+        <script type="module">
+            import {Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh} from './three.js';
+
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            // 场景
+            const scene = new Scene();
+            // 相机
+            const perspectiveCamera = new PerspectiveCamera(45, width / height, 1, 1000);
+            // 渲染器
+            const renderer = new WebGLRenderer();
+            renderer.setSize(width, height);
+            document.body.appendChild(renderer.domElement);
+
+            // 创建几何体
+            const geometry = new BoxGeometry(1, 1, 1);
+            const material = new MeshBasicMaterial({color: 0x00ff00});
+            const cube = new Mesh(geometry, material);
+            scene.add(cube);
+            perspectiveCamera.position.z = 10;
+
+            function animate(){
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, perspectiveCamera);
+                requestAnimationFrame(animate);
+            }
+            animate();
+        </script>
+    </body>
+</html>
