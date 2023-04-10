@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>自定义几何体 BufferGeometry</title>
+    </head>
+    <body>
+        <script type="module">
+            import * as THREE from './three.js';
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true,
+            });
+            renderer.setSize(width, height);
+            document.body.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            // ?如果定义36个点坐标颜色不会每个面都显示
+            const vertices = new Float32Array([
+                -100, -100, 100,
+                100, -100, 100,
+                100, 100, 100,
+                -100, 100, 100,
+                -100, -100, -100,
+                -100, 100, -100,
+                100, 100, -100,
+                100, -100, -100
+            ]);
+
+            const indices = new Uint16Array([
+                0, 1, 2, 0, 2, 3,    // front
+                4, 5, 6, 4, 6, 7,    // back
+                3, 2, 6, 3, 6, 5,    // top
+                4, 7, 1, 4, 1, 0,    // bottom
+                1, 7, 6, 1, 6, 2,    // right
+                4, 0, 3, 4, 3, 5     // left
+            ]);
+            // 设置每个面的颜色
+            const colors = new Float32Array([
+                1, 0, 0,  // 前面：红色
+                0, 1, 0,  // 后面：绿色
+                0, 0, 1,  // 上面：蓝色
+                1, 1, 0,  // 底面：黄色
+                1, 0, 1,  // 右侧面：品红
+                0, 1, 1   // 左侧面：青色
+            ]);
+
+            // 将顶点位置和顶点索引数据存储到BufferGeometry中，并计算法向量
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+            console.log(geometry)
+            const material = new THREE.MeshBasicMaterial({vertexColors: true, side: THREE.DoubleSide});
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+            camera.position.z = 200;
+
+            function animate() {
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        </script>
+    </body>
+</html>
