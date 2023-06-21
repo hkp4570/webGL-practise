@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>material-材质</title>
+    </head>
+    <body>
+        <script type="module">
+            import * as THREE from './three.js';
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-window.innerWidth / 2, window.innerWidth / 2, window.innerHeight / 2, -window.innerHeight / 2, 10, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer. localClippingEnabled=true;
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            camera.position.z = 200;
+
+            const geometry1 = new THREE.BufferGeometry();
+            const vertices1 = new Float32Array([
+                -100, 0, 50,
+                100, 0, 50,
+                0, 100, 50,
+            ]);
+
+            geometry1.setAttribute('position', new THREE.BufferAttribute(vertices1, 3));
+            const material1 = new THREE.MeshBasicMaterial({color: 0xff0000});
+            const triangle1 = new THREE.Mesh(geometry1, material1);
+            scene.add(triangle1);
+
+            const geometry2 = new THREE.BufferGeometry();
+            const vertices2 = new Float32Array([
+                0,0,0,
+                50,0,0,
+                0,200,0
+            ])
+            geometry2.setAttribute('position', new THREE.BufferAttribute(vertices2, 3));
+            const material2 = new THREE.MeshBasicMaterial({
+                color: 0x00ff00,
+                opacity: 0.5,
+                transparent: true,
+                alphaTest: 0.1,
+                clipIntersection: true,
+                clippingPlanes: [
+                    new THREE.Plane(new THREE.Vector3(0, 1, 0), -10)
+                ],
+                depthTest: false
+            });
+            const triangle2 = new THREE.Mesh(geometry2, material2);
+            scene.add(triangle2);
+
+            renderer.render(scene, camera);
+        </script>
+    </body>
+</html>
