@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>material-clip</title>
+    </head>
+    <body>
+        <script type="module">
+            import * as THREE from './three.js';
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-window.innerWidth / 2, window.innerWidth / 2, window.innerHeight / 2, -window.innerHeight / 2, 10, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.localClippingEnabled = true;
+            document.body.appendChild(renderer.domElement);
+            // renderer.setClearColor(0xffffff);
+            camera.position.z = 500;
+
+            const group = new THREE.Group();
+
+            function initGeometry() {
+                for (let i = 0; i < 15; i++) {
+                    const geometry = new THREE.SphereGeometry(i * 10, 32, 32);
+                    const material = new THREE.MeshBasicMaterial({
+                        color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                        clipIntersection: true,
+                        clippingPlanes: [
+                            new THREE.Plane(new THREE.Vector3(0, 0, -1), 0),
+                            new THREE.Plane(new THREE.Vector3(0, -1, 0), 0),
+                            new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0),
+                        ],
+                        side: THREE.DoubleSide,
+                        opacity: (Math.random() * 5 + 5) / 10,
+                        transparent: true,
+                        // dithering: true,
+                        // visible: false,
+                    });
+                    const sphere = new THREE.Mesh(geometry, material);
+                    group.add(sphere);
+                }
+                scene.add(group);
+            }
+
+            initGeometry();
+
+            renderer.render(scene, camera);
+
+            let deg = 0;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                deg += 1;
+                camera.lookAt(0, 0, 0);
+                camera.position.set(200 * Math.cos(deg * Math.PI / 180), 0, 200 * Math.sin(deg * Math.PI / 180));
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        </script>
+    </body>
+</html>
