@@ -9,7 +9,15 @@
     </head>
     <body>
         <script type="module">
-            import {Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh} from './three.js';
+            import {
+                Scene,
+                PerspectiveCamera,
+                WebGLRenderer,
+                BoxGeometry,
+                MeshBasicMaterial,
+                Mesh,
+                TextureLoader
+            } from './three.js';
 
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -24,17 +32,30 @@
 
             // 创建几何体
             const geometry = new BoxGeometry(1, 1, 1);
-            const material = new MeshBasicMaterial({color: 0x00ff00});
+            // 添加纹理
+            const texture = new TextureLoader().load('../images/1.jpg', function (res) {
+                console.log('success', res);
+            }, function () {
+                console.log('progress');
+            }, function (err) {
+                console.log('err', err);
+            })
+            // const material = new MeshBasicMaterial({color: 0x00ff00});
+            const material = new MeshBasicMaterial({
+                map: texture
+            });
+
             const cube = new Mesh(geometry, material);
             scene.add(cube);
             perspectiveCamera.position.z = 10;
 
-            function animate(){
+            function animate() {
                 cube.rotation.x += 0.01;
                 cube.rotation.y += 0.01;
                 renderer.render(scene, perspectiveCamera);
                 requestAnimationFrame(animate);
             }
+
             animate();
         </script>
     </body>
