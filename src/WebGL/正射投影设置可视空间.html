@@ -2,41 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>键盘事件改变观察者视角</title>
+    <title>正射投影设置可视空间</title>
     <script src="../utils/utils.js"></script>
     <script src="../utils/cuon-matrix.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="500" height="500"></canvas>
+<p id="nearFar">近裁剪面和远裁剪面</p>
 <script type="notjs" id="vertex">
     attribute vec4 a_position;
     attribute vec4 a_color;
     uniform mat4 a_viewMatrix;
+    uniform mat4 a_projMatrix;
     varying vec4 v_color;
     void main(){
-        gl_Position = a_viewMatrix * a_position;
+        gl_Position = a_projMatrix * a_position;
         v_color = a_color;
     }
 </script>
 <script type="notjs" id="fragment">
     precision mediump float;
     varying vec4 v_color;
-   void main(){
+    void main(){
         gl_FragColor = v_color;
-   }
+    }
 </script>
 <script>
     const canvas = document.getElementById('canvas');
+    const nf = document.getElementById('nearFar');
     const gl = canvas.getContext('webgl');
-
     const program = fastCreateProgram(gl, 'vertex', 'fragment');
     gl.useProgram(program);
 
     const a_position = gl.getAttribLocation(program, 'a_position');
     const a_color = gl.getAttribLocation(program, 'a_color');
     const a_viewMatrix = gl.getUniformLocation(program, 'a_viewMatrix');
-    const viewMatrix = new Matrix4();
-    let eyeX = 0.20, eyeY = 0.25, eyeZ = 0.25;
+    const a_projMatrix = gl.getUniformLocation(program, 'a_projMatrix');
+    const projMatrix = new Matrix4();
+    let eyeX = 0.20, eyeY = 0.25, eyeZ = 0.25, g_near = 0.0, g_far=0.5;
 
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -59,28 +62,33 @@
     gl.vertexAttribPointer(a_color, 3, gl.FLOAT, false, 4 * 6, 4 * 3);
     gl.enableVertexAttribArray(a_color);
 
-    // 当更改观察者视角时，可能会导致图像的部分不在可是区域内，会看不到。
-    // 可通过正射投影设置可视空间来解决
     document.addEventListener('keydown', function (event) {
+        console.log(event)
         if (event.code === 'ArrowLeft') {
-            eyeX -= 0.10;
+            g_near -= 0.10;
         } else if (event.code === 'ArrowRight') {
-            eyeX += 0.10;
-        } else {
+            g_near += 0.10;
+        } else if (event.code === 'ArrowUp'){
+            g_far += 0.10;
+        }else if (event.code === 'ArrowDown'){
+            g_far -= 0.10;
+        }else{
             return;
         }
         draw();
     }, false)
 
     function draw(){
-        viewMatrix.setLookAt(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
-        gl.uniformMatrix4fv(a_viewMatrix, false, viewMatrix.elements);
+        projMatrix.setOrtho(-1.0, 1.0,-1.0,1.0, g_near, g_far);
+        gl.uniformMatrix4fv(a_projMatrix, false, projMatrix.elements);
 
         gl.clear(gl.COLOR_BUFFER_BIT);
+        nf.innerHTML = 'near: ' + Math.round(g_near * 100)/100 + ', far: ' + Math.round(g_far*100)/100;
         gl.drawArrays(gl.TRIANGLES, 0, 9);
     }
     gl.clearColor(0, 0, 0, 1);
     draw();
+
 </script>
 </body>
 </html>
