@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>为立方体每个面添加纹理图像</title>
+    <script src="../../utils/utils.js"></script>
+    <script src="../../utils/cuon-matrix.js"></script>
+</head>
+<body>
+<canvas id="canvas" width="500" height="500"></canvas>
+<script type="notjs" id="vertex">
+    attribute vec4 a_position;
+    attribute vec2 a_texCoord;
+    varying vec2 v_texCoord;
+    uniform mat4 u_mvpMatrix;
+    void main(){
+        gl_Position = u_mvpMatrix * a_position;
+        v_texCoord = a_texCoord;
+    }
+</script>
+<script type="notjs" id="fragment">
+    precision mediump float;
+    varying vec2 v_texCoord;
+    uniform sampler2D u_sampler;
+    void main(){
+        gl_FragColor = texture2D(u_sampler, v_texCoord);
+    }
+</script>
+<script>
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl');
+
+    const program = fastCreateProgram(gl, 'vertex', 'fragment');
+    gl.useProgram(program);
+
+    const a_position = gl.getAttribLocation(program, 'a_position');
+    const a_texCoord = gl.getAttribLocation(program, 'a_texCoord');
+    const u_mvpMatrix = gl.getUniformLocation(program, 'u_mvpMatrix');
+    const u_sampler = gl.getUniformLocation(program, 'u_sampler');
+    const mvpMatrix = new Matrix4();
+    const viewMatrix = new Matrix4();
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,    // v0-v1-v2-v3 front
+        1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0,    // v0-v3-v4-v5 right
+        1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0,    // v0-v5-v6-v1 up
+        -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,    // v1-v6-v7-v2 left
+        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,    // v7-v4-v3-v2 down
+        1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0     // v4-v7-v6-v5 back
+    ]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(a_position, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_position);
+
+    const texBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,    // v0-v1-v2-v3 front
+        0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,    // v0-v3-v4-v5 right
+        1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0,    // v0-v5-v6-v1 up
+        1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,    // v1-v6-v7-v2 left
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0,    // v7-v4-v3-v2 down
+        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0     // v4-v7-v6-v5 back
+    ]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(a_texCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_texCoord);
+
+    const indices = new Uint8Array([
+        0, 1, 2, 0, 2, 3,    // front
+        4, 5, 6, 4, 6, 7,    // right
+        8, 9, 10, 8, 10, 11,    // up
+        12, 13, 14, 12, 14, 15,    // left
+        16, 17, 18, 16, 18, 19,    // down
+        20, 21, 22, 20, 22, 23     // back
+    ]);
+    const indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+
+
+    const img = new Image();
+    img.src = '../../images/1.jpg';
+    img.onload = function(){
+        const texture = gl.createTexture();
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        // 配置纹理图像
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.uniform1i(u_sampler, 0);
+        draw();
+    }
+
+    function draw(){
+        viewMatrix.setPerspective(30,1,1,100);
+        viewMatrix.lookAt(3.0,3.0,10.0,0,0,0,0,1,0);
+        mvpMatrix.set(viewMatrix);
+        gl.uniformMatrix4fv(u_mvpMatrix,false,mvpMatrix.elements);
+
+        gl.clearColor(0,0,0,1);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
+    }
+
+
+
+</script>
+</body>
+</html>
